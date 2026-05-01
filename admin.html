@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Ring Box</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf7f3; --card: #fff; --border: rgba(0,0,0,.09);
+  --txt: #1e1510; --sub: #6b5a50; --accent: #c4748a;
+  --accent2: #d4956a; --ok: #4a9e6b;
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#1a1510;--card:#231e18;--border:rgba(255,255,255,.1);--txt:#f0ece5;--sub:#9e8c80;}
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);min-height:100vh;font-family:'DM Sans',sans-serif;color:var(--txt);padding:clamp(16px,4vw,48px);}
+
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:12px;}
+.top h1{font-family:'Playfair Display',serif;font-weight:400;font-size:clamp(20px,4vw,28px);color:var(--txt);}
+.top p{font-size:12px;color:var(--sub);letter-spacing:.06em;text-transform:uppercase;margin-top:4px;}
+.live-link{font-size:13px;color:var(--accent2);text-decoration:none;background:rgba(212,149,106,.1);
+  border:.5px solid rgba(212,149,106,.25);border-radius:20px;padding:6px 14px;transition:background .2s;}
+.live-link:hover{background:rgba(212,149,106,.2);}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:640px){.grid{grid-template-columns:1fr;}}
+
+.card{background:var(--card);border-radius:16px;border:.5px solid var(--border);padding:20px 22px;margin-bottom:16px;}
+.card h2{font-family:'Playfair Display',serif;font-size:14px;font-style:italic;color:var(--sub);
+  letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px;}
+
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:13px;}
+.field label{font-size:11px;color:var(--sub);letter-spacing:.07em;text-transform:uppercase;}
+.field input[type=text],.field input[type=url],.field textarea,.field select{
+  background:var(--bg);border:.5px solid var(--border);border-radius:10px;
+  padding:9px 13px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--txt);
+  outline:none;width:100%;transition:border-color .2s;}
+.field input:focus,.field textarea:focus{border-color:var(--accent);}
+.field textarea{resize:vertical;min-height:52px;}
+.field .note{font-size:11px;color:var(--sub);margin-top:4px;line-height:1.5;}
+.field .note code{background:rgba(0,0,0,.06);border-radius:4px;padding:1px 5px;font-family:monospace;font-size:11px;}
+
+/* Color row */
+.color-row{display:flex;align-items:center;gap:8px;}
+.color-row input[type=color]{width:36px;height:36px;border:.5px solid var(--border);
+  border-radius:8px;padding:2px;cursor:pointer;background:var(--card);}
+.color-row input[type=text]{flex:1;}
+
+/* Toggle */
+.tog-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.tog-row span{font-size:14px;}
+.tog{width:44px;height:26px;background:rgba(0,0,0,.15);border-radius:13px;
+  position:relative;cursor:pointer;border:none;transition:background .3s;flex-shrink:0;}
+.tog.on{background:linear-gradient(135deg,var(--accent2),var(--accent));}
+.tog::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;
+  background:#fff;border-radius:50%;transition:transform .3s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.tog.on::after{transform:translateX(18px);}
+
+/* Face tabs */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.tab{background:rgba(0,0,0,.04);border:.5px solid var(--border);border-radius:20px;
+  padding:6px 14px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--sub);
+  cursor:pointer;transition:all .2s;letter-spacing:.03em;}
+.tab.on{background:rgba(196,116,138,.12);border-color:rgba(196,116,138,.3);color:var(--txt);}
+
+/* Photo list */
+.photo-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
+.photo-row{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.03);
+  border-radius:9px;padding:7px 11px;border:.5px solid var(--border);}
+.photo-row-preview{width:34px;height:34px;border-radius:6px;overflow:hidden;
+  flex-shrink:0;background:rgba(0,0,0,.07);}
+.photo-row-preview img{width:100%;height:100%;object-fit:cover;}
+.photo-row-path{flex:1;font-size:12px;word-break:break-all;}
+.photo-del{background:none;border:none;cursor:pointer;color:var(--sub);
+  font-size:15px;padding:2px 6px;border-radius:5px;transition:color .2s;}
+.photo-del:hover{color:#c00;}
+.add-row{display:flex;gap:7px;}
+.add-row input{flex:1;background:var(--bg);border:.5px solid var(--border);
+  border-radius:9px;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;
+  color:var(--txt);outline:none;}
+.add-row input:focus{border-color:var(--accent);}
+.add-btn{background:rgba(196,116,138,.1);border:.5px solid rgba(196,116,138,.22);
+  border-radius:9px;padding:8px 13px;font-size:13px;font-family:'DM Sans',sans-serif;
+  color:var(--txt);cursor:pointer;white-space:nowrap;transition:background .2s;}
+.add-btn:hover{background:rgba(196,116,138,.2);}
+
+/* Presets */
+.presets{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;}
+.preset{border:.5px solid var(--border);border-radius:20px;padding:5px 13px;
+  font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s;}
+
+/* Output */
+.output-wrap{position:relative;}
+#output{width:100%;min-height:180px;background:#1a1510;color:#d4c8be;
+  border-radius:12px;padding:16px;font-family:monospace;font-size:11px;
+  line-height:1.6;border:.5px solid rgba(255,255,255,.1);resize:vertical;outline:none;
+  white-space:pre;}
+.copy-btn{position:absolute;top:10px;right:10px;
+  background:rgba(255,255,255,.12);border:.5px solid rgba(255,255,255,.2);
+  border-radius:8px;padding:5px 12px;font-size:12px;color:#fff;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:background .2s;}
+.copy-btn:hover{background:rgba(255,255,255,.22);}
+.copy-btn.done{background:rgba(74,158,107,.4);border-color:rgba(74,158,107,.5);}
+
+/* Action buttons */
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
+.btn-primary{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;
+  border:none;border-radius:12px;padding:13px 26px;font-size:14px;
+  font-family:'DM Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;
+  cursor:pointer;transition:opacity .2s,transform .1s;flex:1;}
+.btn-primary:hover{opacity:.9;}
+.btn-primary:active{transform:scale(.99);}
+.btn-secondary{background:rgba(0,0,0,.06);border:.5px solid var(--border);
+  border-radius:12px;padding:13px 20px;font-size:14px;font-family:'DM Sans',sans-serif;
+  color:var(--sub);cursor:pointer;transition:background .2s;}
+.btn-secondary:hover{background:rgba(0,0,0,.1);}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(10px);
+  background:rgba(28,14,4,.9);color:#fff;padding:8px 18px;border-radius:50px;
+  font-size:12px;letter-spacing:.04em;opacity:0;transition:all .24s;
+  z-index:500;pointer-events:none;white-space:nowrap;}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.info-box{background:rgba(212,149,106,.1);border:.5px solid rgba(212,149,106,.25);
+  border-radius:12px;padding:14px 18px;margin-bottom:16px;font-size:13px;color:var(--sub);line-height:1.6;}
+.info-box strong{color:var(--txt);}
+.info-box code{background:rgba(0,0,0,.07);border-radius:4px;padding:1px 5px;font-family:monospace;font-size:12px;}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div>
+    <h1>✦ Admin — Ring Box</h1>
+    <p>Konfiguration bearbeiten &amp; Code generieren</p>
+  </div>
+  <a class="live-link" href="index.html" target="_blank">🔗 Live-Seite öffnen</a>
+</div>
+
+<div class="info-box">
+  <strong>So funktioniert es:</strong> Hier alles einstellen → <em>Config generieren</em> klicken →
+  den generierten Code kopieren → in der <code>index.html</code> den <code>CONFIG = { … }</code> Block
+  ersetzen → auf GitHub pushen. Dateien (Videos, Fotos, Musik) kommen in den <code>assets/</code> Ordner.
+</div>
+
+<!-- Global settings -->
+<div class="card">
+  <h2>Seiten-Einstellungen</h2>
+  <div class="grid">
+    <div class="field">
+      <label>Überschrift</label>
+      <input type="text" id="s-h" value="Für Dich 💍">
+    </div>
+    <div class="field">
+      <label>Untertitel</label>
+      <input type="text" id="s-s" value="Dreh den Würfel · Entdecke Momente">
+    </div>
+  </div>
+  <div class="field">
+    <label>Hintergrundmusik</label>
+    <input type="text" id="s-m" placeholder="assets/musik.mp3">
+    <p class="note">MP3 in <code>assets/</code> laden → <code>assets/musik.mp3</code> eingeben. Leer = kein Musik-Button.</p>
+  </div>
+  <div class="tog-row">
+    <span>Musik automatisch starten</span>
+    <button class="tog" id="tog-ap"></button>
+  </div>
+</div>
+
+<!-- Theme -->
+<div class="card">
+  <h2>Farb-Thema</h2>
+  <div class="presets" id="presets">
+    <button class="preset" data-p="warm"   style="background:linear-gradient(135deg,rgba(255,200,150,.4),rgba(255,170,200,.3))">Warm</button>
+    <button class="preset" data-p="rose"   style="background:linear-gradient(135deg,rgba(255,180,200,.45),rgba(220,150,220,.35))">Rose</button>
+    <button class="preset" data-p="sky"    style="background:linear-gradient(135deg,rgba(160,210,255,.4),rgba(180,230,255,.3))">Himmel</button>
+    <button class="preset" data-p="forest" style="background:linear-gradient(135deg,rgba(160,220,180,.4),rgba(200,240,200,.3))">Wald</button>
+    <button class="preset" data-p="dusk"   style="background:linear-gradient(135deg,rgba(180,150,230,.4),rgba(230,160,200,.3))">Dämmerung</button>
+    <button class="preset" data-p="ivory"  style="background:linear-gradient(135deg,rgba(255,245,220,.8),rgba(240,230,200,.7))">Elfenbein</button>
+  </div>
+  <div class="grid">
+    <div class="field"><label>Hintergrund</label>
+      <div class="color-row"><input type="color" id="c-bg" value="#fdf8f2"><input type="text" id="c-bg-t" value="#fdf8f2"></div></div>
+    <div class="field"><label>Glow oben-links</label>
+      <div class="color-row"><input type="color" id="c-g1" value="#ffb870"><input type="text" id="c-g1-t" value="rgba(255,200,150,0.40)"></div></div>
+    <div class="field"><label>Glow unten-rechts</label>
+      <div class="color-row"><input type="color" id="c-g2" value="#ffaacc"><input type="text" id="c-g2-t" value="rgba(255,170,200,0.30)"></div></div>
+    <div class="field"><label>Glow Mitte</label>
+      <div class="color-row"><input type="color" id="c-g3" value="#ccb4ff"><input type="text" id="c-g3-t" value="rgba(200,180,255,0.22)"></div></div>
+  </div>
+  <p class="note" style="margin-top:4px">Im Textfeld direkt <code>rgba(r,g,b,0.35)</code> eingeben um Stärke zu steuern.</p>
+</div>
+
+<!-- Faces -->
+<div class="card">
+  <h2>Würfelflächen</h2>
+  <div class="tabs" id="faceTabs">
+    <button class="tab on" data-f="0">Vorne</button>
+    <button class="tab" data-f="1">Rechts</button>
+    <button class="tab" data-f="2">Hinten</button>
+    <button class="tab" data-f="3">Links</button>
+    <button class="tab" data-f="4">Oben</button>
+    <button class="tab" data-f="5">Unten</button>
+  </div>
+
+  <div class="grid">
+    <div class="field">
+      <label>Beschriftung (auf Würfel)</label>
+      <input type="text" id="f-label" placeholder="Unsere Geschichte">
+    </div>
+    <div class="field">
+      <label>Caption (Fullscreen)</label>
+      <input type="text" id="f-cap" placeholder="Erinnerungen für die Ewigkeit">
+    </div>
+  </div>
+  <div class="field">
+    <label>Vorschaubild (Thumbnail auf Würfel)</label>
+    <input type="text" id="f-thumb" placeholder="assets/thumb1.jpg">
+    <p class="note">Erstes Foto reicht oft als Thumbnail. Leer = Gradient mit Emoji.</p>
+  </div>
+  <div class="field">
+    <label>Video (Fullscreen)</label>
+    <input type="text" id="f-video" placeholder="assets/video1.mp4">
+    <p class="note">Hochformat (9:16) und Querformat werden automatisch angepasst (<code>object-fit:contain</code>).</p>
+  </div>
+  <div class="field">
+    <label>Fotos — Diashow (Fullscreen)</label>
+    <div class="photo-list" id="photoList"></div>
+    <div class="add-row">
+      <input type="text" id="newPhoto" placeholder="assets/foto1.jpg  oder  https://...">
+      <button class="add-btn" id="addPhoto">+ Hinzufügen</button>
+    </div>
+    <p class="note">Fotos wechseln alle 4 Sek. automatisch. Navigation per Pfeil-Buttons.</p>
+  </div>
+</div>
+
+<!-- Output -->
+<div class="card">
+  <h2>Generierter CONFIG-Block</h2>
+  <p style="font-size:12px;color:var(--sub);margin-bottom:12px;line-height:1.5;">
+    Klick auf <em>Config generieren</em> → Code kopieren → in <code>index.html</code> den
+    <code>const CONFIG = { … };</code> Block komplett ersetzen → auf GitHub speichern.
+  </p>
+  <div class="output-wrap">
+    <textarea id="output" readonly spellcheck="false">← Klick auf „Config generieren"</textarea>
+    <button class="copy-btn" id="copyBtn">Kopieren</button>
+  </div>
+</div>
+
+<div class="actions">
+  <button class="btn-primary"   id="generateBtn">⚙ Config generieren</button>
+  <button class="btn-secondary" id="previewBtn">🔗 Live-Seite öffnen</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// ── Face data ──────────────────────────────────────
+const FACE_DEFAULTS = [
+  {label:'Unsere Geschichte', thumb:'', video:'', photos:[], caption:'Erinnerungen für die Ewigkeit'},
+  {label:'Besondere Momente', thumb:'', video:'', photos:[], caption:'Für immer in meinem Herzen'},
+  {label:'Unsere Orte',       thumb:'', video:'', photos:[], caption:'Überall wo du bist, bin ich zuhause'},
+  {label:'Stille Stunden',    thumb:'', video:'', photos:[], caption:'In jedem Augenblick bei dir'},
+  {label:'Helle Tage',        thumb:'', video:'', photos:[], caption:'Du machst alles heller'},
+  {label:'Die Zukunft',       thumb:'', video:'', photos:[], caption:'Alles, was noch kommt'}
+];
+
+const PRESETS = {
+  warm:  {bg:'#fdf8f2',g1:'rgba(255,200,150,0.40)',g2:'rgba(255,170,200,0.30)',g3:'rgba(200,180,255,0.22)'},
+  rose:  {bg:'#fdf0f5',g1:'rgba(255,180,200,0.42)',g2:'rgba(220,150,220,0.32)',g3:'rgba(255,210,230,0.25)'},
+  sky:   {bg:'#f0f7fd',g1:'rgba(160,210,255,0.40)',g2:'rgba(180,230,255,0.30)',g3:'rgba(200,220,255,0.22)'},
+  forest:{bg:'#f2f8f3',g1:'rgba(160,220,180,0.40)',g2:'rgba(200,240,200,0.30)',g3:'rgba(180,230,160,0.22)'},
+  dusk:  {bg:'#f6f2fd',g1:'rgba(180,150,230,0.40)',g2:'rgba(230,160,200,0.30)',g3:'rgba(200,180,255,0.22)'},
+  ivory: {bg:'#faf8f0',g1:'rgba(255,240,200,0.52)',g2:'rgba(255,220,180,0.38)',g3:'rgba(240,230,200,0.30)'}
+};
+
+// faces array — keep full state so switching tabs doesn't lose data
+const faces = FACE_DEFAULTS.map(f=>({...f, photos:[...f.photos]}));
+let curFace = 0;
+
+// ── Toggles ────────────────────────────────────────
+function setTog(id,on){
+  const el=document.getElementById(id);
+  el.classList.toggle('on',!!on); el.dataset.on=on?'true':'false';
+}
+document.getElementById('tog-ap').addEventListener('click',function(){
+  setTog('tog-ap', this.dataset.on!=='true');
+});
+
+// ── Color pickers ──────────────────────────────────
+function r2h(val){
+  if(!val)return'#ffffff';
+  val=val.trim();
+  if(val.startsWith('#'))return val;
+  const m=val.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if(!m)return'#ffffff';
+  return'#'+[m[1],m[2],m[3]].map(x=>+x<16?'0'+parseInt(x).toString(16):parseInt(x).toString(16)).join('');
+}
+
+['bg','g1','g2','g3'].forEach(k=>{
+  const cp=document.getElementById('c-'+k), tp=document.getElementById('c-'+k+'-t');
+  cp.addEventListener('input',()=>{ tp.value=cp.value; });
+  tp.addEventListener('input',()=>{ const h=r2h(tp.value); if(h) cp.value=h; });
+});
+
+// Presets
+document.querySelectorAll('.preset').forEach(btn=>btn.addEventListener('click',()=>{
+  const p=PRESETS[btn.dataset.p]; if(!p)return;
+  document.getElementById('c-bg').value=p.bg; document.getElementById('c-bg-t').value=p.bg;
+  document.getElementById('c-g1').value=r2h(p.g1); document.getElementById('c-g1-t').value=p.g1;
+  document.getElementById('c-g2').value=r2h(p.g2); document.getElementById('c-g2-t').value=p.g2;
+  document.getElementById('c-g3').value=r2h(p.g3); document.getElementById('c-g3-t').value=p.g3;
+}));
+
+// ── Face tabs ──────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{
+  collectFace(curFace);
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  tab.classList.add('on');
+  curFace=+tab.dataset.f;
+  renderFace(curFace);
+}));
+
+function collectFace(i){
+  faces[i].label  = document.getElementById('f-label').value;
+  faces[i].caption= document.getElementById('f-cap').value;
+  faces[i].thumb  = document.getElementById('f-thumb').value.trim();
+  faces[i].video  = document.getElementById('f-video').value.trim();
+  // photos collected live via add/del buttons
+}
+
+function renderFace(i){
+  document.getElementById('f-label').value = faces[i].label||'';
+  document.getElementById('f-cap').value   = faces[i].caption||'';
+  document.getElementById('f-thumb').value = faces[i].thumb||'';
+  document.getElementById('f-video').value = faces[i].video||'';
+  renderPhotoList(i);
+}
+
+function renderPhotoList(i){
+  const list=document.getElementById('photoList');
+  list.innerHTML='';
+  faces[i].photos.forEach((src,idx)=>{
+    const row=document.createElement('div');
+    row.className='photo-row';
+    row.innerHTML=`
+      <div class="photo-row-preview"><img src="${src}" onerror="this.style.opacity=.2"></div>
+      <span class="photo-row-path">${src}</span>
+      <button class="photo-del" title="Entfernen">✕</button>`;
+    row.querySelector('.photo-del').addEventListener('click',()=>{
+      faces[i].photos.splice(idx,1); renderPhotoList(i);
+    });
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('addPhoto').addEventListener('click',()=>{
+  const inp=document.getElementById('newPhoto'), val=inp.value.trim();
+  if(!val)return;
+  faces[curFace].photos.push(val); inp.value=''; renderPhotoList(curFace);
+});
+document.getElementById('newPhoto').addEventListener('keydown',e=>{
+  if(e.key==='Enter') document.getElementById('addPhoto').click();
+});
+
+// ── Generate config ────────────────────────────────
+document.getElementById('generateBtn').addEventListener('click',()=>{
+  collectFace(curFace);
+
+  const cfg = {
+    heading:  document.getElementById('s-h').value||'Für Dich 💍',
+    subtitle: document.getElementById('s-s').value||'',
+    music:    document.getElementById('s-m').value.trim()||'',
+    autoplay: document.getElementById('tog-ap').dataset.on==='true',
+    theme: {
+      bg:    document.getElementById('c-bg-t').value||document.getElementById('c-bg').value,
+      glow1: document.getElementById('c-g1-t').value||document.getElementById('c-g1').value,
+      glow2: document.getElementById('c-g2-t').value||document.getElementById('c-g2').value,
+      glow3: document.getElementById('c-g3-t').value||document.getElementById('c-g3').value,
+    },
+    faces: faces.map(f=>({
+      label:     f.label||'',
+      thumbnail: f.thumb||'',
+      video:     f.video||'',
+      photos:    [...f.photos],
+      caption:   f.caption||''
+    }))
+  };
+
+  // Pretty-print
+  const lines = [];
+  lines.push('const CONFIG = {');
+  lines.push(`  heading:  "${esc(cfg.heading)}",`);
+  lines.push(`  subtitle: "${esc(cfg.subtitle)}",`);
+  lines.push(`  music:    "${esc(cfg.music)}",`);
+  lines.push(`  autoplay: ${cfg.autoplay},`);
+  lines.push('');
+  lines.push('  theme: {');
+  lines.push(`    bg:    "${cfg.theme.bg}",`);
+  lines.push(`    glow1: "${cfg.theme.glow1}",`);
+  lines.push(`    glow2: "${cfg.theme.glow2}",`);
+  lines.push(`    glow3: "${cfg.theme.glow3}"`);
+  lines.push('  },');
+  lines.push('');
+  lines.push('  faces: [');
+  cfg.faces.forEach((f,i)=>{
+    const photos = f.photos.length
+      ? '[\n      ' + f.photos.map(p=>`"${esc(p)}"`).join(',\n      ') + '\n    ]'
+      : '[]';
+    const comma = i<cfg.faces.length-1?',':'';
+    lines.push('    {');
+    lines.push(`      label:     "${esc(f.label)}",`);
+    lines.push(`      thumbnail: "${esc(f.thumbnail)}",`);
+    lines.push(`      video:     "${esc(f.video)}",`);
+    lines.push(`      photos:    ${photos},`);
+    lines.push(`      caption:   "${esc(f.caption)}"`);
+    lines.push(`    }${comma}`);
+  });
+  lines.push('  ]');
+  lines.push('};');
+
+  document.getElementById('output').value = lines.join('\n');
+  toast('Config generiert ✓ — jetzt kopieren und in index.html einfügen');
+});
+
+function esc(s){ return (s||'').replace(/\\/g,'\\\\').replace(/"/g,'\\"'); }
+
+// ── Copy ───────────────────────────────────────────
+document.getElementById('copyBtn').addEventListener('click',()=>{
+  const out=document.getElementById('output');
+  if(!out.value||out.value.startsWith('←'))return;
+  navigator.clipboard.writeText(out.value).then(()=>{
+    const btn=document.getElementById('copyBtn');
+    btn.textContent='✓ Kopiert'; btn.classList.add('done');
+    setTimeout(()=>{ btn.textContent='Kopieren'; btn.classList.remove('done'); },2500);
+  }).catch(()=>{
+    out.select(); document.execCommand('copy');
+    toast('Kopiert!');
+  });
+});
+
+// ── Preview ────────────────────────────────────────
+document.getElementById('previewBtn').addEventListener('click',()=>{
+  window.open('index.html','_blank');
+});
+
+// ── Toast ──────────────────────────────────────────
+function toast(m){
+  const t=document.getElementById('toast');
+  t.textContent=m; t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),3000);
+}
+
+// ── Init ───────────────────────────────────────────
+renderFace(0);
+</script>
+</body>
+</html>
