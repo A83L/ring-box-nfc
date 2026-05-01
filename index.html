@@ -195,12 +195,18 @@ body {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
-/* Edge fade — very soft, barely visible */
-.face::after {
-  content:''; position:absolute; inset:0; border-radius:15px; z-index:4;
+/* Cube edge fade — 4 directional gradients stacked for smooth transparency */
+.face::before {
+  content:''; position:absolute; inset:0; border-radius:15px; z-index:4; pointer-events:none;
   background:
-    radial-gradient(ellipse at center, transparent 62%, var(--bg) 100%);
-  opacity:.45; pointer-events:none;
+    linear-gradient(to right,  var(--bg) 0%, transparent 22%, transparent 78%, var(--bg) 100%);
+  opacity:.7;
+}
+.face::after {
+  content:''; position:absolute; inset:0; border-radius:15px; z-index:4; pointer-events:none;
+  background:
+    linear-gradient(to bottom, var(--bg) 0%, transparent 22%, transparent 78%, var(--bg) 100%);
+  opacity:.7;
 }
 /* Thumbnail */
 .fthumb {
@@ -298,13 +304,14 @@ body {
 }
 #fs.open { opacity:1; pointer-events:all; }
 
-/* Soft edge vignette inside fullscreen — fades media into bg color */
-#fs::after {
-  content:''; position:absolute; inset:0; z-index:8; pointer-events:none;
-  background:
-    linear-gradient(to right,  rgba(var(--bg-rgb,253,248,242),0.9) 0%, transparent 12%, transparent 88%, rgba(var(--bg-rgb,253,248,242),0.9) 100%),
-    linear-gradient(to bottom, rgba(var(--bg-rgb,253,248,242),0.9) 0%, transparent 10%, transparent 82%, rgba(var(--bg-rgb,253,248,242),0.9) 100%);
+/* Soft edge vignette — 4 separate divs, one per edge, all above media */
+#fs-edge-l, #fs-edge-r, #fs-edge-t, #fs-edge-b {
+  position:absolute; z-index:50; pointer-events:none;
 }
+#fs-edge-l { top:0; bottom:0; left:0;   width:18%; background:linear-gradient(to right,  rgba(var(--bg-rgb,253,248,242),1) 0%, transparent 100%); }
+#fs-edge-r { top:0; bottom:0; right:0;  width:18%; background:linear-gradient(to left,   rgba(var(--bg-rgb,253,248,242),1) 0%, transparent 100%); }
+#fs-edge-t { left:0; right:0; top:0;    height:16%; background:linear-gradient(to bottom, rgba(var(--bg-rgb,253,248,242),1) 0%, transparent 100%); }
+#fs-edge-b { left:0; right:0; bottom:0; height:22%; background:linear-gradient(to top,    rgba(var(--bg-rgb,253,248,242),1) 0%, transparent 100%); }
 
 /* Video — contain so portrait fully visible */
 #fv {
@@ -498,6 +505,11 @@ body {
   <button class="fnav" id="fprev">‹</button>
   <button class="fnav" id="fnext">›</button>
   <div id="fcount"></div>
+  <!-- Edge fades — sit above video/photos -->
+  <div id="fs-edge-l"></div>
+  <div id="fs-edge-r"></div>
+  <div id="fs-edge-t"></div>
+  <div id="fs-edge-b"></div>
 </div>
 
 <div class="toast" id="toast"></div>
