@@ -14,8 +14,8 @@
 const CONFIG = {
   heading:  "Für Dich 💍",
   subtitle: "Dreh den Würfel · Entdecke Momente",
-  music:    "assets/freesound_community-beautiful-string-music-23519.mp3",
-  autoplay: true,
+  music:    "",        // "assets/musik.mp3" oder externe URL, leer = kein Button
+  autoplay: false,
 
   theme: {
     bg:    "#fdf8f2",
@@ -24,46 +24,47 @@ const CONFIG = {
     glow3: "rgba(200,180,255,0.22)"
   },
 
+  // 6 Seiten: front · right · back · left · top · bottom
   faces: [
     {
       label:     "Unsere Geschichte",
-      thumbnail: "assets/output_00026.png",
-      video:     "assets/output_00026.mp4",
-      photos:    [],
+      thumbnail: "",                    // "assets/thumb1.jpg"
+      video:     "",                    // "assets/video1.mp4"
+      photos:    [],                    // ["assets/f1.jpg","assets/f2.jpg"]
       caption:   "Erinnerungen für die Ewigkeit"
     },
     {
       label:     "Besondere Momente",
-      thumbnail: "assets/output_00027.png",
-      video:     "assets/output_00027.mp4",
+      thumbnail: "",
+      video:     "",
       photos:    [],
       caption:   "Für immer in meinem Herzen"
     },
     {
       label:     "Unsere Orte",
-      thumbnail: "assets/output_00028.png",
-      video:     "assets/output_00028.mp4",
+      thumbnail: "",
+      video:     "",
       photos:    [],
       caption:   "Überall wo du bist, bin ich zuhause"
     },
     {
       label:     "Stille Stunden",
-      thumbnail: "assets/output_00022.png",
-      video:     "assets/output_00022.mp4",
+      thumbnail: "",
+      video:     "",
       photos:    [],
       caption:   "In jedem Augenblick bei dir"
     },
     {
       label:     "Helle Tage",
-      thumbnail: "assets/output_00023.png",
-      video:     "assets/output_00023.mp4",
+      thumbnail: "",
+      video:     "",
       photos:    [],
       caption:   "Du machst alles heller"
     },
     {
       label:     "Die Zukunft",
-      thumbnail: "assets/output_00024.png",
-      video:     "assets/output_00023.mp4",
+      thumbnail: "",
+      video:     "",
       photos:    [],
       caption:   "Alles, was noch kommt"
     }
@@ -175,9 +176,10 @@ body {
   width:100%; height:100%;
   transform-style: preserve-3d;
   will-change: transform;
+  transform-origin: 50% 50% 0;
 }
 .cube.snap {
-  transition: transform .5s cubic-bezier(.25,.46,.45,.94);
+  transition: transform .55s cubic-bezier(.25,.46,.45,.94);
 }
 
 /* ── Face ── */
@@ -187,14 +189,15 @@ body {
   border:.5px solid rgba(255,255,255,.42);
   box-shadow: inset 0 0 22px rgba(255,255,255,.1), 0 5px 28px rgba(0,0,0,.1);
   cursor:pointer;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
-/* Soft edge vignette — blends into bg */
+/* Edge fade — stronger corners, bleeds further in */
 .face::after {
   content:''; position:absolute; inset:0; border-radius:15px; z-index:4;
   background:
-    linear-gradient(to right,  var(--bg) 0%,transparent 13%,transparent 87%,var(--bg) 100%),
-    linear-gradient(to bottom, var(--bg) 0%,transparent 13%,transparent 87%,var(--bg) 100%);
-  opacity:.58; pointer-events:none;
+    radial-gradient(ellipse at center, transparent 52%, var(--bg) 100%);
+  opacity:.72; pointer-events:none;
 }
 /* Thumbnail */
 .fthumb {
@@ -578,7 +581,18 @@ function snap(){
 
 function go(fi,sn){
   face=fi;
+  // Always land perfectly upright — force exact target rotation
+  // This prevents tilted text/images after dragging
   rx=uw(rx,ROTS[fi].x); ry=uw(ry,ROTS[fi].y);
+  // Snap to exact values so content is always level
+  // (uw gives us the shortest-path angle, then we hard-set on next frame)
+  if(sn){
+    // After transition ends, hard-set to exact degrees so no float drift
+    setTimeout(()=>{
+      rx=ROTS[fi].x; ry=ROTS[fi].y;
+      cube.style.transform=`rotateX(${rx}deg) rotateY(${ry}deg)`;
+    }, 570);
+  }
   tf(!!sn); dots(); resetAuto();
 }
 
@@ -619,7 +633,8 @@ function pEnd(){
 function mom(){
   vx*=DEC; vy*=DEC; rx+=vx; ry+=vy;
   rx=Math.max(-92,Math.min(92,rx)); tf(false);
-  Math.sqrt(vx*vx+vy*vy)>MV?raf=requestAnimationFrame(mom):snap();
+  if(Math.sqrt(vx*vx+vy*vy)>MV){ raf=requestAnimationFrame(mom); }
+  else { snap(); }
 }
 
 // Touch events on scene
