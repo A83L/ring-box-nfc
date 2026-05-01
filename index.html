@@ -14,8 +14,8 @@
 const CONFIG = {
   heading:  "Für Dich 💍",
   subtitle: "Dreh den Würfel · Entdecke Momente",
-  music:    "assets/freesound_community-beautiful-string-music-23519.mp3",
-  autoplay: true,
+  music:    "",        // "assets/musik.mp3" oder externe URL, leer = kein Button
+  autoplay: false,
 
   theme: {
     bg:    "#fdf8f2",
@@ -24,25 +24,26 @@ const CONFIG = {
     glow3: "rgba(200,180,255,0.22)"
   },
 
+  // 6 Seiten: front · right · back · left · top · bottom
   faces: [
     {
       label:     "Unsere Geschichte",
-      thumbnail: "assets/output_00026.png",
-      video:     "assets/output_00026.mp4",
-      photos:    [],
+      thumbnail: "",                    // "assets/thumb1.jpg"
+      video:     "",                    // "assets/video1.mp4"
+      photos:    [],                    // ["assets/f1.jpg","assets/f2.jpg"]
       caption:   "Erinnerungen für die Ewigkeit"
     },
     {
       label:     "Besondere Momente",
-      thumbnail: "assets/output_00027.png",
-      video:     "assets/output_00027.mp4",
+      thumbnail: "",
+      video:     "",
       photos:    [],
       caption:   "Für immer in meinem Herzen"
     },
     {
       label:     "Unsere Orte",
-      thumbnail: "assets/output_00028.png",
-      video:     "assets/output_00028.mp4",
+      thumbnail: "",
+      video:     "",
       photos:    [],
       caption:   "Überall wo du bist, bin ich zuhause"
     },
@@ -440,14 +441,37 @@ body {
     const sb=document.getElementById('sb'), aud=document.getElementById('bgm');
     sb.style.display='';
     aud.src=CONFIG.music;
-    let on=!!CONFIG.autoplay;
-    if(on) aud.play().catch(()=>{});
-    sb.textContent=on?'♫ Musik':'♪ Musik';
+    aud.loop=true;
+    let on=false;
+
+    function tryPlay(){
+      return aud.play().then(()=>{ on=true; sb.textContent='♫ Musik'; }).catch(()=>{});
+    }
+
+    if(CONFIG.autoplay){
+      // Try immediately, unlock on first touch if blocked
+      tryPlay().catch(()=>{});
+      if(!on){
+        const unlock=()=>{
+          tryPlay();
+          document.removeEventListener('touchstart',unlock);
+          document.removeEventListener('mousedown',unlock);
+        };
+        document.addEventListener('touchstart',unlock,{once:true,passive:true});
+        document.addEventListener('mousedown',unlock,{once:true});
+      }
+    }
+
+    sb.textContent='♪ Musik';
     sb.addEventListener('click',()=>{
       on=!on;
-      on?aud.play().catch(()=>{}):aud.pause();
+      on ? tryPlay() : aud.pause();
       sb.textContent=on?'♫ Musik':'♪ Musik';
     });
+
+    // Make audio accessible globally so fullscreen never touches it
+    window._bgm=aud;
+    window._bgmOn=()=>on;
   }
 
   // Faces
@@ -611,7 +635,7 @@ function openFS(i){
   const hasV=!!f.video, hasP=!!(f.photos&&f.photos.length);
   if(!hasV&&!hasP)return;
 
-  // Reset
+  // Reset video/photos only — music keeps playing untouched
   fvEl.style.display='none'; fvEl.src='';
   fpEl.innerHTML=''; fpEl.style.display='none';
   fprev.style.display='none'; fnext.style.display='none';
@@ -622,8 +646,10 @@ function openFS(i){
 
   if(hasV){
     fvEl.style.display='block';
-    fvEl.src=f.video; fvEl.muted=false;
-    fvEl.play().catch(()=>{ fvEl.muted=true; fvEl.play().catch(()=>{}); });
+    fvEl.src=f.video;
+    // Video plays muted so it doesn't conflict with background music
+    fvEl.muted=true;
+    fvEl.play().catch(()=>{});
   }
   if(hasP){
     fpEl.style.display='flex';
@@ -658,8 +684,9 @@ fnext.addEventListener('click',()=>adv(1));
 
 function closeFS(){
   fsEl.classList.remove('open');
-  fvEl.pause(); fvEl.src='';
+  fvEl.pause(); fvEl.src='';  // stop video only
   clearInterval(slideT);
+  // background music keeps playing — never touched here
 }
 fxEl.addEventListener('click',closeFS);
 fsEl.addEventListener('click',e=>{ if(e.target===fsEl)closeFS(); });
