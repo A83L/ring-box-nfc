@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>💍 Für Dich</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   KONFIGURATION — hier alles anpassen, dann ins Repo pushen
+   Dateien in den assets/ Ordner laden
+═══════════════════════════════════════════════════════════ */
+const CONFIG = {
+  heading:  "Für Dich 💍",
+  subtitle: "Dreh den Würfel · Entdecke Momente",
+  music:    "",        // "assets/musik.mp3" oder externe URL, leer = kein Button
+  autoplay: false,
+
+  theme: {
+    bg:    "#fdf8f2",
+    glow1: "rgba(255,200,150,0.40)",
+    glow2: "rgba(255,170,200,0.30)",
+    glow3: "rgba(200,180,255,0.22)"
+  },
+
+  // 6 Seiten: front · right · back · left · top · bottom
+  faces: [
+    {
+      label:     "Unsere Geschichte",
+      thumbnail: "",                    // "assets/thumb1.jpg"
+      video:     "",                    // "assets/video1.mp4"
+      photos:    [],                    // ["assets/f1.jpg","assets/f2.jpg"]
+      caption:   "Erinnerungen für die Ewigkeit"
+    },
+    {
+      label:     "Besondere Momente",
+      thumbnail: "",
+      video:     "",
+      photos:    [],
+      caption:   "Für immer in meinem Herzen"
+    },
+    {
+      label:     "Unsere Orte",
+      thumbnail: "",
+      video:     "",
+      photos:    [],
+      caption:   "Überall wo du bist, bin ich zuhause"
+    },
+    {
+      label:     "Stille Stunden",
+      thumbnail: "",
+      video:     "",
+      photos:    [],
+      caption:   "In jedem Augenblick bei dir"
+    },
+    {
+      label:     "Helle Tage",
+      thumbnail: "",
+      video:     "",
+      photos:    [],
+      caption:   "Du machst alles heller"
+    },
+    {
+      label:     "Die Zukunft",
+      thumbnail: "",
+      video:     "",
+      photos:    [],
+      caption:   "Alles, was noch kommt"
+    }
+  ]
+};
+/* ═══════════════════════════════════════════════════════════ */
+</script>
+
+<style>
+:root {
+  --bg:   #fdf8f2;
+  --g1:   rgba(255,200,150,0.40);
+  --g2:   rgba(255,170,200,0.30);
+  --g3:   rgba(200,180,255,0.22);
+  --txt:  #2a1f1a;
+  --sub:  #6b5a50;
+  --sz:   min(82vw, 340px);
+  --half: calc(var(--sz) * 0.5);
+}
+
+* { margin:0; padding:0; box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent; }
+
+body {
+  background: var(--bg);
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-family: 'DM Sans', sans-serif;
+  overflow: hidden; position: relative; user-select: none;
+}
+
+/* ── Animated glows ── */
+.glows { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+.glows::before {
+  content:''; position:absolute;
+  width:70vmax; height:70vmax; top:-20vmax; left:-15vmax;
+  background: radial-gradient(circle, var(--g1) 0%, transparent 70%);
+  animation: ga 12s ease-in-out infinite alternate;
+}
+.glows::after {
+  content:''; position:absolute;
+  width:60vmax; height:60vmax; bottom:-15vmax; right:-10vmax;
+  background: radial-gradient(circle, var(--g2) 0%, transparent 70%);
+  animation: gb 15s ease-in-out infinite alternate;
+}
+.gm {
+  position:absolute; width:50vmax; height:50vmax;
+  top:50%; left:50%; transform:translate(-50%,-50%);
+  background: radial-gradient(circle, var(--g3) 0%, transparent 65%);
+  animation: gc 9s ease-in-out infinite alternate;
+}
+@keyframes ga { to { transform:translate(5vw,8vh) scale(1.1); } }
+@keyframes gb { to { transform:translate(-6vw,-5vh) scale(.95); } }
+@keyframes gc { to { transform:translate(-50%,-50%) scale(1.15); } }
+
+/* ── Title ── */
+.title {
+  position:fixed; top:clamp(14px,3.5vh,28px); left:50%;
+  transform:translateX(-50%); z-index:10;
+  text-align:center; pointer-events:none; white-space:nowrap;
+}
+.title h1 {
+  font-family:'Playfair Display',serif;
+  font-size:clamp(15px,3.8vw,23px); font-weight:400;
+  color:var(--txt); letter-spacing:.03em;
+  opacity:0; animation:fi 1s .2s ease forwards;
+}
+.title p {
+  font-size:clamp(9px,2vw,11px); color:var(--sub);
+  letter-spacing:.12em; text-transform:uppercase; margin-top:3px;
+  opacity:0; animation:fi 1s .5s ease forwards;
+}
+@keyframes fi { to { opacity:1; } }
+
+/* ── Sound btn ── */
+.sbtn {
+  position:fixed; top:clamp(14px,3.5vh,24px); right:16px; z-index:20;
+  background:rgba(255,255,255,.55); backdrop-filter:blur(10px);
+  border:.5px solid rgba(255,255,255,.75); border-radius:50px;
+  padding:7px 13px; font-size:12px; font-family:'DM Sans',sans-serif;
+  color:var(--sub); cursor:pointer; transition:background .2s; letter-spacing:.05em;
+  display:none;
+}
+.sbtn:hover { background:rgba(255,255,255,.8); }
+
+/* ── Scene ── */
+.scene {
+  position:relative; z-index:10;
+  perspective:1100px;
+  width:var(--sz); height:var(--sz);
+  margin:16px 0; cursor:grab;
+  /* no touch-action so we handle everything ourselves */
+}
+.scene:active { cursor:grabbing; }
+
+/* Float animation on the wrapper only — cube itself has no animation */
+.fw {
+  width:100%; height:100%;
+  animation: fl 6s ease-in-out infinite;
+}
+@keyframes fl {
+  0%,100% { transform:translateY(0); }
+  50%      { transform:translateY(-9px); }
+}
+
+/* The cube — GPU-accelerated, no layout work during drag */
+.cube {
+  width:100%; height:100%;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transform-origin: 50% 50% 0;
+}
+.cube.snap {
+  transition: transform .72s cubic-bezier(.16,.86,.38,.99);
+}
+
+/* ── Face ── */
+.face {
+  position:absolute; inset:0;
+  border-radius:15px; overflow:hidden;
+  border:.5px solid rgba(255,255,255,.42);
+  box-shadow: inset 0 0 22px rgba(255,255,255,.1), 0 5px 28px rgba(0,0,0,.1);
+  cursor:pointer;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+/* Edge fade — stronger corners, bleeds further in */
+.face::after {
+  content:''; position:absolute; inset:0; border-radius:15px; z-index:4;
+  background:
+    radial-gradient(ellipse at center, transparent 52%, var(--bg) 100%);
+  opacity:.72; pointer-events:none;
+}
+/* Thumbnail */
+.fthumb {
+  position:absolute; inset:0; z-index:1;
+  width:100%; height:100%; object-fit:cover; border-radius:15px;
+}
+/* Placeholder */
+.fph {
+  position:absolute; inset:0; z-index:1;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:5px; border-radius:15px;
+}
+.fph em { font-size:clamp(22px,6.5vw,34px); font-style:normal; }
+.fph small {
+  font-family:'Playfair Display',serif; font-size:clamp(8px,2.1vw,11px);
+  color:var(--sub); font-style:italic; letter-spacing:.05em;
+  text-align:center; padding:0 8px;
+}
+/* Caption */
+.fcap {
+  position:absolute; bottom:0; left:0; right:0; z-index:5;
+  padding:clamp(7px,2.2vw,14px);
+  background:linear-gradient(to top,rgba(12,6,3,.52) 0%,transparent 100%);
+  color:#fff; font-family:'Playfair Display',serif;
+  font-size:clamp(9px,2.7vw,13px); font-style:italic;
+  text-align:center; letter-spacing:.02em; border-radius:0 0 15px 15px;
+  pointer-events:none; text-shadow:0 1px 4px rgba(0,0,0,.4);
+}
+/* Play hint */
+.fplay {
+  position:absolute; top:7px; right:7px; z-index:6;
+  width:20px; height:20px; border-radius:50%;
+  background:rgba(255,255,255,.32); backdrop-filter:blur(4px);
+  font-size:9px; display:flex; align-items:center; justify-content:center;
+  color:#fff; pointer-events:none; letter-spacing:0;
+}
+
+/* Gradient per face */
+.face-front  .fph { background:linear-gradient(135deg,rgba(255,215,175,.38),rgba(255,195,195,.25)); }
+.face-right  .fph { background:linear-gradient(135deg,rgba(195,215,255,.38),rgba(175,200,255,.25)); }
+.face-back   .fph { background:linear-gradient(135deg,rgba(195,250,205,.38),rgba(175,235,195,.25)); }
+.face-left   .fph { background:linear-gradient(135deg,rgba(255,205,235,.38),rgba(235,175,225,.25)); }
+.face-top    .fph { background:linear-gradient(135deg,rgba(255,238,175,.38),rgba(255,215,145,.25)); }
+.face-bottom .fph { background:linear-gradient(135deg,rgba(218,196,255,.38),rgba(198,176,255,.25)); }
+
+/* 3D transforms */
+.face-front  { transform:translateZ(var(--half)); }
+.face-back   { transform:rotateY(180deg)  translateZ(var(--half)); }
+.face-right  { transform:rotateY(90deg)   translateZ(var(--half)); }
+.face-left   { transform:rotateY(-90deg)  translateZ(var(--half)); }
+.face-top    { transform:rotateX(90deg)   translateZ(var(--half)); }
+.face-bottom { transform:rotateX(-90deg)  translateZ(var(--half)); }
+
+/* ── Dots ── */
+.dots {
+  display:flex; gap:7px; align-items:center; justify-content:center;
+  position:relative; z-index:10; margin-top:2px;
+}
+.dot {
+  width:5px; height:5px; border-radius:50%;
+  background:rgba(100,60,30,.18); transition:all .3s; cursor:pointer;
+}
+.dot.on { background:rgba(100,60,30,.72); transform:scale(1.5); }
+
+/* ── Swipe hint ── */
+.hint {
+  position:fixed; bottom:clamp(18px,4.5vh,38px); left:50%;
+  transform:translateX(-50%); z-index:10; pointer-events:none;
+  animation: hf 4s 1.5s forwards;
+}
+.hint p { font-size:10px; color:var(--sub); letter-spacing:.1em; text-transform:uppercase; }
+@keyframes hf { 0%{opacity:1} 65%{opacity:1} 100%{opacity:0} }
+
+/* ── Auto ring ── */
+.ring {
+  position:fixed; bottom:clamp(48px,8vh,78px); right:16px; z-index:10;
+  width:26px; height:26px; opacity:0; transition:opacity .4s;
+}
+.ring.on { opacity:.42; }
+.ring svg { transform:rotate(-90deg); }
+.ring circle { fill:none; stroke:var(--sub); stroke-width:2; stroke-linecap:round;
+  stroke-dasharray:69; stroke-dashoffset:69; transition:stroke-dashoffset 1s linear; }
+
+/* ════════════════════════════════════════════
+   FULLSCREEN OVERLAY
+════════════════════════════════════════════ */
+#fs {
+  position:fixed; inset:0; z-index:200;
+  background:#000;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none;
+  transition:opacity .28s;
+  touch-action:pan-y;
+}
+#fs.open { opacity:1; pointer-events:all; }
+
+/* Video — contain so portrait fully visible */
+#fv {
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:contain;
+  display:none;
+}
+
+/* Photos */
+#fp {
+  position:absolute; inset:0;
+  display:none; align-items:center; justify-content:center;
+}
+#fp img {
+  position:absolute;
+  max-width:100%; max-height:100%;
+  object-fit:contain;
+  opacity:0; transition:opacity .9s ease;
+  border-radius:4px;
+}
+#fp img.on { opacity:1; }
+
+/* Caption */
+#fc {
+  position:absolute; bottom:0; left:0; right:0;
+  padding:clamp(14px,4vh,30px);
+  background:linear-gradient(to top,rgba(0,0,0,.68) 0%,transparent 100%);
+  color:#fff; font-family:'Playfair Display',serif;
+  font-size:clamp(13px,4vw,19px); font-style:italic;
+  text-align:center; letter-spacing:.03em;
+  text-shadow:0 2px 8px rgba(0,0,0,.5); pointer-events:none;
+}
+
+/* Close */
+#fx {
+  position:absolute; top:14px; right:14px; z-index:10;
+  width:36px; height:36px; border-radius:50%;
+  background:rgba(255,255,255,.14); backdrop-filter:blur(8px);
+  border:.5px solid rgba(255,255,255,.28);
+  color:#fff; font-size:17px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .2s;
+}
+#fx:hover { background:rgba(255,255,255,.26); }
+
+/* Photo nav */
+.fnav {
+  position:absolute; top:50%; transform:translateY(-50%); z-index:10;
+  width:38px; height:38px; border-radius:50%;
+  background:rgba(255,255,255,.11); backdrop-filter:blur(6px);
+  border:.5px solid rgba(255,255,255,.2);
+  color:#fff; font-size:20px; cursor:pointer;
+  display:none; align-items:center; justify-content:center;
+  transition:background .2s;
+}
+.fnav:hover { background:rgba(255,255,255,.24); }
+#fprev { left:10px; }
+#fnext { right:10px; }
+
+/* Counter */
+#fcount {
+  position:absolute; top:14px; left:50%; transform:translateX(-50%);
+  font-size:11px; color:rgba(255,255,255,.55); letter-spacing:.08em;
+  display:none;
+}
+
+/* Toast */
+.toast {
+  position:fixed; bottom:22px; left:50%;
+  transform:translateX(-50%) translateY(10px);
+  background:rgba(28,14,4,.9); color:#fff;
+  padding:7px 17px; border-radius:50px;
+  font-size:12px; letter-spacing:.04em;
+  opacity:0; transition:all .24s; z-index:500; pointer-events:none; white-space:nowrap;
+}
+.toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ── Splash Screen ── */
+#splash {
+  position:fixed; inset:0; z-index:1000;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  background:var(--bg);
+  transition:opacity .6s ease, visibility .6s;
+}
+#splash.gone { opacity:0; visibility:hidden; pointer-events:none; }
+.splash-inner {
+  display:flex; flex-direction:column;
+  align-items:center; gap:20px;
+  animation: spl 1s ease forwards;
+}
+@keyframes spl { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.splash-emoji { font-size:clamp(48px,14vw,80px); line-height:1; }
+.splash-title {
+  font-family:'Playfair Display',serif;
+  font-size:clamp(22px,6vw,34px); font-weight:400;
+  color:var(--txt); letter-spacing:.03em; text-align:center; line-height:1.3;
+}
+.splash-sub {
+  font-size:clamp(10px,2.5vw,12px); color:var(--sub);
+  letter-spacing:.14em; text-transform:uppercase; text-align:center;
+}
+.splash-btn {
+  margin-top:6px;
+  background:linear-gradient(135deg,rgba(212,149,106,.18),rgba(196,116,138,.18));
+  border:0.5px solid rgba(196,116,138,.35); border-radius:50px;
+  padding:14px 36px; font-family:'Playfair Display',serif; font-style:italic;
+  font-size:clamp(14px,3.5vw,17px); color:var(--txt);
+  cursor:pointer; letter-spacing:.04em; transition:transform .15s;
+}
+.splash-btn:active { transform:scale(.97); }
+.splash-note { font-size:10px; color:var(--sub); letter-spacing:.08em; text-transform:uppercase; opacity:.55; }
+
+</style>
+</head>
+<body>
+
+
+<!-- Splash screen — unlocks audio on Android/iOS -->
+<div id="splash">
+  <div class="splash-inner">
+    <div class="splash-emoji" id="splashEmoji">💍</div>
+    <div class="splash-title" id="splashTitle">Für Dich</div>
+    <div class="splash-sub" id="splashSub">Eine besondere Überraschung</div>
+    <button class="splash-btn" id="splashBtn">Öffnen ✦</button>
+    <div class="splash-note" id="splashNote">Tippen zum Fortfahren</div>
+  </div>
+</div>
+
+<div class="glows"><div class="gm"></div></div>
+
+<div class="title">
+  <h1 id="pH">Für Dich 💍</h1>
+  <p  id="pS">Dreh den Würfel · Entdecke Momente</p>
+</div>
+<button class="sbtn" id="sb">♪ Musik</button>
+<audio id="bgm" loop></audio>
+
+<!-- Cube -->
+<div class="scene" id="scene">
+  <div class="fw">
+    <div class="cube" id="cube">
+      <div class="face face-front"  data-i="0"><div class="fph"><em>💍</em><small></small></div><div class="fcap"></div><div class="fplay">▶</div></div>
+      <div class="face face-right"  data-i="1"><div class="fph"><em>✨</em><small></small></div><div class="fcap"></div><div class="fplay">▶</div></div>
+      <div class="face face-back"   data-i="2"><div class="fph"><em>🌸</em><small></small></div><div class="fcap"></div><div class="fplay">▶</div></div>
+      <div class="face face-left"   data-i="3"><div class="fph"><em>🌙</em><small></small></div><div class="fcap"></div><div class="fplay">▶</div></div>
+      <div class="face face-top"    data-i="4"><div class="fph"><em>☀️</em><small></small></div><div class="fcap"></div><div class="fplay">▶</div></div>
+      <div class="face face-bottom" data-i="5"><div class="fph"><em>🔮</em><small></small></div><div class="fcap"></div><div class="fplay">▶</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="dots" id="dots">
+  <div class="dot on" data-i="0"></div><div class="dot" data-i="1"></div>
+  <div class="dot" data-i="2"></div><div class="dot" data-i="3"></div>
+  <div class="dot" data-i="4"></div><div class="dot" data-i="5"></div>
+</div>
+
+<div class="ring" id="ring">
+  <svg width="26" height="26" viewBox="0 0 26 26">
+    <circle cx="13" cy="13" r="11" id="rc"/>
+  </svg>
+</div>
+<div class="hint"><p>← Ziehen · Tippen zum Öffnen →</p></div>
+
+<!-- Fullscreen -->
+<div id="fs">
+  <video id="fv" playsinline webkit-playsinline loop></video>
+  <div  id="fp"></div>
+  <div  id="fc"></div>
+  <button id="fx">✕</button>
+  <button class="fnav" id="fprev">‹</button>
+  <button class="fnav" id="fnext">›</button>
+  <div id="fcount"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// ── Apply CONFIG ──────────────────────────────────
+(function(){
+  const T=CONFIG.theme, R=document.documentElement.style;
+  if(T.bg)    R.setProperty('--bg',T.bg);
+  if(T.glow1) R.setProperty('--g1',T.glow1);
+  if(T.glow2) R.setProperty('--g2',T.glow2);
+  if(T.glow3) R.setProperty('--g3',T.glow3);
+
+  document.getElementById('pH').textContent = CONFIG.heading;
+  document.getElementById('pS').textContent = CONFIG.subtitle;
+  document.title = CONFIG.heading;
+
+  // Music
+  if(CONFIG.music){
+    const sb=document.getElementById('sb'), aud=document.getElementById('bgm');
+    sb.style.display='';
+    aud.src=CONFIG.music;
+    aud.loop=true;
+    let on=false;
+
+    function tryPlay(){
+      return aud.play().then(()=>{ on=true; sb.textContent='♫ Musik'; }).catch(()=>{});
+    }
+
+    if(CONFIG.autoplay){
+      // Try immediately, unlock on first touch if blocked
+      tryPlay().catch(()=>{});
+      if(!on){
+        const unlock=()=>{
+          tryPlay();
+          document.removeEventListener('touchstart',unlock);
+          document.removeEventListener('mousedown',unlock);
+        };
+        document.addEventListener('touchstart',unlock,{once:true,passive:true});
+        document.addEventListener('mousedown',unlock,{once:true});
+      }
+    }
+
+    sb.textContent='♪ Musik';
+    sb.addEventListener('click',()=>{
+      on=!on;
+      on ? tryPlay() : aud.pause();
+      sb.textContent=on?'♫ Musik':'♪ Musik';
+    });
+
+    // Splash button unlocks audio (Android/iOS require real click)
+    const splashBtn=document.getElementById('splashBtn');
+    if(splashBtn){
+      splashBtn.addEventListener('click',()=>{
+        if(CONFIG.autoplay){
+          aud.play().then(()=>{ on=true; sb.textContent='♫ Musik'; }).catch(()=>{});
+        }
+      },{once:true});
+    }
+    window._bgm=aud;
+    window._bgmOn=()=>on;
+  }
+
+  // Faces
+  const faces=document.querySelectorAll('.face');
+  CONFIG.faces.forEach((f,i)=>{
+    const el=faces[i];
+    el.querySelector('small').textContent=f.label||'';
+    el.querySelector('.fcap').textContent=f.caption||'';
+    // Thumbnail
+    if(f.thumbnail){
+      const img=document.createElement('img');
+      img.className='fthumb'; img.src=f.thumbnail; img.alt=f.label||'';
+      el.insertBefore(img,el.firstChild);
+    }
+    // Hide play icon if nothing to open
+    const has=f.video||(f.photos&&f.photos.length);
+    if(!has) el.querySelector('.fplay').style.display='none';
+  });
+})();
+
+// ── Cube drag engine ──────────────────────────────
+const cube  = document.getElementById('cube');
+const scene = document.getElementById('scene');
+
+// Face rotations: [rotX, rotY] in degrees
+// Horizontal ring: front=0, right=-90, back=-180, left=90
+// Vertical: top=-90rotX, bottom=+90rotX
+const FACES = [
+  {x:  0, y:   0},   // 0 front
+  {x:  0, y: -90},   // 1 right
+  {x:  0, y:-180},   // 2 back
+  {x:  0, y:  90},   // 3 left
+  {x:-90, y:   0},   // 4 top
+  {x: 90, y:   0},   // 5 bottom
+];
+
+let rx=0, ry=0, vx=0, vy=0;
+let down=false, moved=false;
+let lx=0, ly=0, lt=0, raf=null;
+let face=0, autoT=null, autoIv=null;
+
+const SENS=0.40, DEC=0.82, MV=0.08;
+// Max vertical tilt — just enough to reach top(90) and bottom(-90)
+// but clamp tightly so horizontal faces stay level
+const MAX_RX = 92;
+
+function applyTf(snap){
+  cube.classList.toggle('snap',!!snap);
+  cube.style.transform=`rotateX(${rx}deg) rotateY(${ry}deg)`;
+}
+
+// Shortest angular distance (-180..+180)
+function adiff(a,b){ return((a-b)%360+540)%360-180; }
+function uw(cur,tgt){ return cur+adiff(cur,tgt); }
+
+// Find nearest face — weighted so top/bottom are reachable
+// The key insight: top/bottom have x=±90, y=0
+// We weight rotX heavily when the drag was mostly vertical
+function nearestFace(){
+  let best=0, bestD=1e9;
+  FACES.forEach((f,i)=>{
+    const dx=adiff(rx,f.x);
+    const dy=adiff(ry,f.y);
+    // For top/bottom (faces 4,5): only rotX matters, ignore rotY drift
+    // For horizontal faces (0-3): only rotY matters, rotX should be near 0
+    let d;
+    if(i===4||i===5){
+      // top/bottom: score purely on how far rotX is from ±90
+      // penalise if rotX is nowhere near ±90
+      d = dx*dx + (dy*0.3)*(dy*0.3);
+    } else {
+      // horizontal: score on rotY distance, but also penalise rotX tilt
+      d = (dx*1.2)*(dx*1.2) + dy*dy;
+    }
+    if(d<bestD){ bestD=d; best=i; }
+  });
+  return best;
+}
+
+function snapToFace(){
+  go(nearestFace(), true);
+}
+
+function go(fi, sn){
+  face = fi;
+  const tgt = FACES[fi];
+
+  if(sn){
+    rx = uw(rx, tgt.x);
+    ry = uw(ry, tgt.y);
+    applyTf(true);
+    // After transition settles: hard-set exact values to kill any drift
+    setTimeout(()=>{
+      cube.classList.remove('snap');
+      rx = tgt.x; ry = tgt.y;
+      cube.style.transform=`rotateX(${tgt.x}deg) rotateY(${tgt.y}deg)`;
+    }, 740);
+  } else {
+    rx = tgt.x; ry = tgt.y;
+    applyTf(false);
+  }
+  dots(); resetAuto();
+}
+
+function next(){
+  // Auto-rotate: cycle horizontal ring, skip top/bottom
+  const h=[0,1,2,3];
+  const cur = h.includes(face) ? face : 0;
+  go(h[(h.indexOf(cur)+1)%4], true);
+}
+
+function dots(){
+  document.querySelectorAll('.dot').forEach(d=>
+    d.classList.toggle('on',+d.dataset.i===face));
+}
+
+// ── Drag handlers ──
+function pStart(cx,cy){
+  cancelAnimationFrame(raf);
+  down=true; moved=false;
+  lx=cx; ly=cy; lt=performance.now();
+  vx=vy=0;
+  cube.classList.remove('snap');
+}
+
+function pMove(cx,cy){
+  if(!down)return;
+  const now=performance.now(), dt=Math.max(now-lt,1);
+  const dx=cx-lx, dy=cy-ly;
+  if(Math.abs(dx)>4||Math.abs(dy)>4) moved=true;
+
+  ry += dx*SENS;
+  rx -= dy*SENS;
+  // Clamp vertical — allow reaching top/bottom but no further
+  rx = Math.max(-MAX_RX, Math.min(MAX_RX, rx));
+
+  applyTf(false);
+  vx = (-dy*SENS)/dt*13;
+  vy = ( dx*SENS)/dt*13;
+  lx=cx; ly=cy; lt=performance.now();
+}
+
+function pEnd(){
+  if(!down)return; down=false;
+  const spd=Math.sqrt(vx*vx+vy*vy);
+  spd>1.0 ? momLoop() : snapToFace();
+  resetAuto();
+}
+
+function momLoop(){
+  vx*=DEC; vy*=DEC;
+  rx+=vx; ry+=vy;
+  rx=Math.max(-MAX_RX,Math.min(MAX_RX,rx));
+  applyTf(false);
+  if(Math.sqrt(vx*vx+vy*vy)>MV){ raf=requestAnimationFrame(momLoop); }
+  else{ snapToFace(); }
+}
+
+// Touch events on scene
+let tStartX=0, tStartY=0;
+scene.addEventListener('touchstart',e=>{
+  if(fsOpen())return;
+  e.preventDefault();
+  tStartX=e.touches[0].clientX; tStartY=e.touches[0].clientY;
+  pStart(tStartX,tStartY);
+},{passive:false});
+scene.addEventListener('touchmove',e=>{
+  e.preventDefault(); if(down) pMove(e.touches[0].clientX,e.touches[0].clientY);
+},{passive:false});
+scene.addEventListener('touchend',e=>{
+  e.preventDefault();
+  const t=e.changedTouches[0];
+  // tap detection
+  if(!moved && Math.abs(t.clientX-tStartX)<14 && Math.abs(t.clientY-tStartY)<14){
+    pEnd(); openFS(face); return;
+  }
+  pEnd();
+},{passive:false});
+
+// Mouse
+scene.addEventListener('mousedown',e=>{ e.preventDefault(); pStart(e.clientX,e.clientY); });
+window.addEventListener('mousemove',e=>{ if(down) pMove(e.clientX,e.clientY); });
+window.addEventListener('mouseup',e=>{
+  if(!down)return;
+  if(!moved) openFS(face);
+  pEnd();
+});
+
+// Dot nav
+document.querySelectorAll('.dot').forEach(d=>
+  d.addEventListener('click',()=>go(+d.dataset.i,true)));
+
+// ── Auto rotate ────────────────────────────────────
+const ringEl=document.getElementById('ring');
+const ringC =document.getElementById('rc');
+const CIRC=69.1;
+
+function resetAuto(){
+  clearTimeout(autoT); clearInterval(autoIv);
+  ringEl.classList.remove('on'); ringC.style.strokeDashoffset=CIRC;
+  autoT=setTimeout(()=>{
+    ringEl.classList.add('on'); let el=0;
+    autoIv=setInterval(()=>{
+      el+=200; ringC.style.strokeDashoffset=CIRC*(1-el/15000);
+      if(el>=15000){ clearInterval(autoIv); next(); }
+    },200);
+  },3000);
+}
+
+// ── Fullscreen ─────────────────────────────────────
+const fsEl  =document.getElementById('fs');
+const fvEl  =document.getElementById('fv');
+const fpEl  =document.getElementById('fp');
+const fcEl  =document.getElementById('fc');
+const fxEl  =document.getElementById('fx');
+const fprev =document.getElementById('fprev');
+const fnext =document.getElementById('fnext');
+const fcnt  =document.getElementById('fcount');
+
+let slide=0, slideT=null;
+const fsOpen=()=>fsEl.classList.contains('open');
+
+function openFS(i){
+  const f=CONFIG.faces[i];
+  const hasV=!!f.video, hasP=!!(f.photos&&f.photos.length);
+  if(!hasV&&!hasP)return;
+
+  // Reset video/photos only — music keeps playing untouched
+  fvEl.style.display='none'; fvEl.src='';
+  fpEl.innerHTML=''; fpEl.style.display='none';
+  fprev.style.display='none'; fnext.style.display='none';
+  fcnt.style.display='none';
+  clearInterval(slideT);
+
+  fcEl.textContent=f.caption||'';
+
+  if(hasV){
+    fvEl.style.display='block';
+    fvEl.src=f.video;
+    // Video plays muted so it doesn't conflict with background music
+    fvEl.muted=true;
+    fvEl.play().catch(()=>{});
+  }
+  if(hasP){
+    fpEl.style.display='flex';
+    f.photos.forEach((s,idx)=>{
+      const img=document.createElement('img');
+      img.src=s; img.className=idx===0?'on':'';
+      fpEl.appendChild(img);
+    });
+    if(f.photos.length>1){
+      fprev.style.display='flex'; fnext.style.display='flex';
+      fcnt.style.display='block';
+      slide=0; updSlide();
+      slideT=setInterval(()=>adv(1),4000);
+    }
+  }
+  fsEl.classList.add('open');
+}
+
+function updSlide(){
+  const imgs=fpEl.querySelectorAll('img');
+  imgs.forEach((img,i)=>img.classList.toggle('on',i===slide));
+  fcnt.textContent=`${slide+1} / ${imgs.length}`;
+}
+function adv(d){
+  const imgs=fpEl.querySelectorAll('img');
+  if(!imgs.length)return;
+  slide=(slide+d+imgs.length)%imgs.length; updSlide();
+  clearInterval(slideT); slideT=setInterval(()=>adv(1),4000);
+}
+fprev.addEventListener('click',()=>adv(-1));
+fnext.addEventListener('click',()=>adv(1));
+
+function closeFS(){
+  fsEl.classList.remove('open');
+  fvEl.pause(); fvEl.src='';  // stop video only
+  clearInterval(slideT);
+  // background music keeps playing — never touched here
+}
+fxEl.addEventListener('click',closeFS);
+fsEl.addEventListener('click',e=>{ if(e.target===fsEl)closeFS(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape')closeFS(); });
+
+// Swipe down to close fullscreen
+let fsY0=0;
+fsEl.addEventListener('touchstart',e=>{ fsY0=e.touches[0].clientY; },{passive:true});
+fsEl.addEventListener('touchend',e=>{
+  if(Math.abs(e.changedTouches[0].clientY-fsY0)>90) closeFS();
+},{passive:true});
+
+// ── Toast ──────────────────────────────────────────
+function toast(m){
+  const t=document.getElementById('toast');
+  t.textContent=m; t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),2000);
+}
+
+// ── Splash init ──────────────────────────────────
+(function(){
+  const splash=document.getElementById('splash');
+  const splashBtn=document.getElementById('splashBtn');
+  const splashTitle=document.getElementById('splashTitle');
+  const splashSub=document.getElementById('splashSub');
+  const splashNote=document.getElementById('splashNote');
+  const splashEmoji=document.getElementById('splashEmoji');
+
+  // Set splash text from config
+  if(splashTitle) splashTitle.textContent=CONFIG.heading||'Für Dich';
+
+  // Hide music note if no music configured
+  if(!CONFIG.music && splashNote) splashNote.style.display='none';
+
+  function dismissSplash(){
+    if(!splash)return;
+    splash.classList.add('gone');
+  }
+
+  if(splashBtn){
+    splashBtn.addEventListener('click',()=>{
+      // This click is the guaranteed user-gesture — audio unlocks here
+      const aud=document.getElementById('bgm');
+      if(aud && aud.src && CONFIG.autoplay){
+        aud.play().then(()=>{
+          const sb=document.getElementById('sb');
+          if(sb) sb.textContent='♫ Musik';
+        }).catch(()=>{});
+      }
+      dismissSplash();
+    });
+  }
+})();
+
+// ── Init ───────────────────────────────────────────
+go(0,false); resetAuto();
+</script>
+</body>
+</html>
